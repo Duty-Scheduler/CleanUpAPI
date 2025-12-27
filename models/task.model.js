@@ -16,6 +16,14 @@ const Task = sequelize.define('Task', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    proof: {
+        type: DataTypes.JSON,
+        allowNull: true
+    },
+    status: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
     created_date: {
         type: DataTypes.DATE
     }

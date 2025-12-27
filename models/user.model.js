@@ -8,13 +8,13 @@ const User = sequelize.define('User', {
         primaryKey: true,
         allowNull: false,
     },
-    avatarLink: {
+    avatar: {
         type: DataTypes.STRING,
         allowNull: false,
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
     email: {
         type: DataTypes.STRING,
@@ -23,7 +23,7 @@ const User = sequelize.define('User', {
     },
     username: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
         unique: true
     },
     name: {
@@ -32,8 +32,20 @@ const User = sequelize.define('User', {
     },
     lastname: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
     },
+    googleId: {
+        type: DataTypes.STRING,
+        unique: true
+    },
+    facebookId: {
+        type: DataTypes.STRING,
+        unique: true
+    },
+    provider: {
+        type: DataTypes.ENUM('local', 'facebook', 'google'),
+        defaultValue: 'local'
+    }
 });
 
 
