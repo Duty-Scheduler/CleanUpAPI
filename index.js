@@ -4,8 +4,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 import { sequelize } from './models/index.js';
 import authRoutes from "./routes/auth.routes.js";
-
-
+import groupRoutes from "./routes/group.routes.js";
+import penaltyRoutes from "./routes/penalty.routes.js";
+import taskRoutes from "./routes/task.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 dotenv.config();
 const PORT = process.env.PORT;
@@ -19,6 +21,10 @@ app.use(cors({
 }));
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/group', groupRoutes);
+app.use('/api/v1/penalty', penaltyRoutes);
+app.use('/api/v1/task', taskRoutes);
+app.use('/api/v1/user', userRoutes);
 
 app.listen(PORT, () => {
     console.log("Server is listening in Port: ", PORT);

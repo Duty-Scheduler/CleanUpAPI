@@ -1,21 +1,19 @@
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { OAuth2Client } from 'google-auth-library';
 import User from "../models/user.model.js";
 import RefreshToken from "../models/refreshToken.model.js";
+import { v4 as uuidv4 } from 'uuid';
 import {
   generateAccessToken,
   generateRefreshToken
 } from "../lib/util.js";
-import { platform } from "os";
 
 dotenv.config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const googleAuth = async (req, res) => {
   const { idToken } = req.body;
-  console.log("idToken: " + idToken);
   if (!idToken) {
     return res.status(400).json({ message: 'Missing idToken' });
   }
@@ -41,14 +39,8 @@ export const googleAuth = async (req, res) => {
     }
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-
-    const hashedToken = await bcrypt.hash(refreshToken, 1);
-    const tokenRecord = await RefreshToken.create({
-      hashtoken: hashedToken,
-      userId: user.id,
-      expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000),
-    });
-    return res.status(201).json({
+    const refreshTokenId = uuidv4();
+    return res.status(200).json({
       user: {
         googleId: payload.sub,
         email: payload.email,
@@ -58,12 +50,85 @@ export const googleAuth = async (req, res) => {
         provider: 'google'
       },
       accessToken,
-      refreshToken
+      refreshToken,
+      refreshTokenId
     });
   } catch (err) {
-    return res.status(500).json({
+    return res.status(401).json({
       message: 'Google auth failed',
       error: err.message
     });
   }
 };
+
+export const introspect = async (req,res) => {
+  const {refreshToken,refreshTokenId} = req.body;
+  if (!refreshToken || !refreshTokenId) {
+    return res.status(400).json({
+      message: "Missing refreshToken or refreshTokenId"
+    });
+  }
+  const refreshToken_record = await RefreshToken.findOne(
+    { where: { id: refreshTokenId } }
+  );
+  if(refreshToken_record){
+    return res.status(401).json({
+        message: "Refresh token revoked or expired"
+    })
+  }
+  try {
+    decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const new_refreshTokenId = uuidv4();
+    refreshToken = RefreshToken.create({
+      id: refreshTokenId,
+      token: refreshToken, 
+      UserId: decoded.userId
+    });
+    const user = User.findByPk(decoded.userId);
+    const accessToken = generateAccessToken(user);
+    const new_refreshToken = generateRefreshToken(user);
+    
+    return res.status(200).json({
+      user: {
+        googleId: user.googleId,
+        email: user.email,
+        name: user.name,
+        lastname: user.lastname || '',
+        avatar: user.avatar || null,
+        provider: 'google'
+      },
+      accessToken,
+      refreshToken: new_refreshToken,
+      refreshTokenId: new_refreshTokenId
+    });
+  } catch (error) {
+    console.log("Error in auth.controller.js-introspect");
+    return res.status(401).json({
+        message: "Invalid RefreshToken"
+    })
+  }
+}
+
+export const logout = async (req,res) => {
+  const {refreshToken,refreshTokenId} = req.body;
+  if (!refreshToken || !refreshTokenId) {
+    return res.status(400).json({
+      message: "Missing refreshToken or refreshTokenId"
+    });
+  }
+  try {
+    decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    refreshToken = RefreshToken.create({
+      id: refreshTokenId,
+      token: refreshToken, 
+      UserId: decoded.userId
+    });
+    return res.status(200).json({
+      message: "Logout successfull"
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Bag request"
+    })
+  }
+}
