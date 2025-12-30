@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../lib/db.js';
 
-const Penalty = sequelize.define('',{
+const Penalty = sequelize.define('Penalty',{
     id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
@@ -19,6 +19,7 @@ const Penalty = sequelize.define('',{
     date: {
         type: DataTypes.DATE,
         allowNull: false,
+        defaultValue: DataTypes.NOW
     }
 })
 export default Penalty;

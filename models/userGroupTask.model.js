@@ -14,6 +14,11 @@ const UserGroupTask  = sequelize.define('UserGroupTask', {
         defaultValue: false,
         allowNull: false,
     },
+    isAdmin: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: false
+    }
 });
 
 

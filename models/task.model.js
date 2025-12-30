@@ -18,15 +18,17 @@ const Task = sequelize.define('Task', {
     },
     proof: {
         type: DataTypes.JSON,
-        allowNull: true
+        allowNull: false,
+        defaultValue: []
     },
     status: {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
-    created_date: {
-        type: DataTypes.DATE
-    }
+    penalty_description: {
+        type: DataTypes.STRING,
+        allowNull: true,
+    },
 });
 
 export default Task;
