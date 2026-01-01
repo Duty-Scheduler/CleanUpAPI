@@ -42,11 +42,42 @@
  * @swagger
  * /api/v1/auth/introspect:
  *   post:
- *     summary: Introspect token
+ *     summary: Introspect refresh token and issue new tokens
  *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh JWT previously issued to the client
+ *               refreshTokenId:
+ *                 type: string
+ *                 description: Client-side identifier for the refresh token
  *     responses:
  *       200:
  *         description: Token info
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   description: Authenticated user info
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *                 refreshTokenId:
+ *                   type: string
+ *       400:
+ *         description: Missing refreshToken or refreshTokenId
+ *       401:
+ *         description: Invalid or revoked refresh token
  */
 /**
  * @swagger
@@ -54,9 +85,28 @@
  *   post:
  *     summary: Logout user (protected)
  *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *                 description: Refresh JWT to revoke
+ *               refreshTokenId:
+ *                 type: string
+ *                 description: Client-side identifier for the refresh token
  *     responses:
  *       200:
- *         description: Logged out
+ *         description: Logout successful
+ *       400:
+ *         description: Missing refreshToken or refreshTokenId
+ *       500:
+ *         description: Bad request / server error
  */
 import express from "express";
 import {
