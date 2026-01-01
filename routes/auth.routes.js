@@ -11,16 +11,32 @@
  *     summary: Google authentication
  *     tags: [Auth]
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             properties:
- *               token:
+ *               idToken:
  *                 type: string
+ *                 description: Google ID token (credential)
  *     responses:
  *       200:
  *         description: Auth success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   description: Authenticated user info
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *                 refreshTokenId:
+ *                   type: string
  */
 /**
  * @swagger
