@@ -18,8 +18,9 @@
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
- *         description: ID of the group
+ *           type: string
+ *           format: uuid
+ *         description: ID of the group (UUID)
  *     responses:
  *       200:
  *         description: List of users in the group
@@ -36,7 +37,8 @@
  *                     type: object
  *                     properties:
  *                       id:
- *                         type: integer
+ *                         type: string
+ *                         format: uuid
  *                       email:
  *                         type: string
  *                       name:
@@ -71,8 +73,9 @@
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
- *         description: ID of the group
+ *           type: string
+ *           format: uuid
+ *         description: ID of the group (UUID)
  *     responses:
  *       200:
  *         description: User statistics in the group
@@ -84,7 +87,8 @@
  *                 type: object
  *                 properties:
  *                   userId:
- *                     type: integer
+ *                     type: string
+ *                     format: uuid
  *                   name:
  *                     type: string
  *                   email:
@@ -119,7 +123,8 @@
  *               type: object
  *               properties:
  *                 userId:
- *                   type: integer
+ *                   type: string
+ *                   format: uuid
  *                 totalTasks:
  *                   type: integer
  *                   description: Total number of tasks assigned to user
