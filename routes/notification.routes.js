@@ -14,14 +14,14 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Notifications
- *   description: API quản lý thông báo
+ *   description: Notification management API
  */
 
 /**
  * @swagger
  * /api/v1/notification:
  *   get:
- *     summary: Lấy danh sách thông báo
+ *     summary: Get list of notifications
  *     tags: [Notifications]
  *     security:
  *       - bearerAuth: []
@@ -30,22 +30,22 @@ const router = express.Router();
  *         name: page
  *         schema:
  *           type: integer
- *         description: Số trang
+ *         description: Page number
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *         description: Số lượng thông báo mỗi trang
+ *         description: Number of notifications per page
  *       - in: query
  *         name: unreadOnly
  *         schema:
  *           type: boolean
- *         description: Chỉ lấy thông báo chưa đọc
+ *         description: Get unread notifications only
  *     responses:
  *       200:
- *         description: Lấy danh sách thông báo thành công
+ *         description: Successfully retrieved notification list
  *       401:
- *         description: Chưa xác thực
+ *         description: Unauthorized
  */
 router.get("/", protectedRoute, getAllNotifications);
 
@@ -53,15 +53,15 @@ router.get("/", protectedRoute, getAllNotifications);
  * @swagger
  * /api/v1/notification/unread-count:
  *   get:
- *     summary: Lấy số lượng thông báo chưa đọc
+ *     summary: Get unread notifications count
  *     tags: [Notifications]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Lấy số lượng thành công
+ *         description: Successfully retrieved count
  *       401:
- *         description: Chưa xác thực
+ *         description: Unauthorized
  */
 router.get("/unread-count", protectedRoute, getUnreadCount);
 
@@ -69,7 +69,7 @@ router.get("/unread-count", protectedRoute, getUnreadCount);
  * @swagger
  * /api/v1/notification/{id}/read:
  *   put:
- *     summary: Đánh dấu thông báo đã đọc
+ *     summary: Mark notification as read
  *     tags: [Notifications]
  *     security:
  *       - bearerAuth: []
@@ -80,12 +80,12 @@ router.get("/unread-count", protectedRoute, getUnreadCount);
  *         schema:
  *           type: string
  *           format: uuid
- *         description: ID của thông báo
+ *         description: Notification ID
  *     responses:
  *       200:
- *         description: Đánh dấu thành công
+ *         description: Successfully marked as read
  *       404:
- *         description: Không tìm thấy thông báo
+ *         description: Notification not found
  */
 router.put("/:id/read", protectedRoute, markAsRead);
 
@@ -93,13 +93,13 @@ router.put("/:id/read", protectedRoute, markAsRead);
  * @swagger
  * /api/v1/notification/read-all:
  *   put:
- *     summary: Đánh dấu tất cả thông báo đã đọc
+ *     summary: Mark all notifications as read
  *     tags: [Notifications]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Đánh dấu tất cả thành công
+ *         description: Successfully marked all as read
  */
 router.put("/read-all", protectedRoute, markAllAsRead);
 
@@ -107,7 +107,7 @@ router.put("/read-all", protectedRoute, markAllAsRead);
  * @swagger
  * /api/v1/notification/{id}:
  *   delete:
- *     summary: Xóa thông báo
+ *     summary: Delete notification
  *     tags: [Notifications]
  *     security:
  *       - bearerAuth: []
@@ -118,12 +118,12 @@ router.put("/read-all", protectedRoute, markAllAsRead);
  *         schema:
  *           type: string
  *           format: uuid
- *         description: ID của thông báo
+ *         description: Notification ID
  *     responses:
  *       200:
- *         description: Xóa thành công
+ *         description: Successfully deleted
  *       404:
- *         description: Không tìm thấy thông báo
+ *         description: Notification not found
  */
 router.delete("/:id", protectedRoute, deleteNotification);
 
