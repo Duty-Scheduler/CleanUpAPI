@@ -6,8 +6,10 @@ import Task from './task.model.js';
 import UserGroupTask from './userGroupTask.model.js';
 import RefreshToken from './refreshToken.model.js';
 
-User.belongsToMany(Task, {through: UserGroupTask, onDelete: 'CASCADE', onUpdate: 'CASCADE'});
-Task.belongsToMany(User, {through: UserGroupTask, onDelete: 'CASCADE', onUpdate: 'CASCADE'});
+User.belongsToMany(Task, {through: UserGroupTask, onDelete: 'CASCADE', onUpdate: 'CASCADE',
+    unique: false});
+Task.belongsToMany(User, {through: UserGroupTask, onDelete: 'CASCADE', onUpdate: 'CASCADE',
+    unique: false});
 
 Group.hasMany(Task, {
   foreignKey: {
@@ -22,8 +24,10 @@ Task.belongsTo(Group, {
   onDelete: "CASCADE"
 });
 
-User.belongsToMany(Group, {through: UserGroupTask, onDelete: 'CASCADE', onUpdate: 'CASCADE'});
-Group.belongsToMany(User, {through: UserGroupTask, onDelete: 'CASCADE', onUpdate: 'CASCADE'});
+User.belongsToMany(Group, {through: UserGroupTask, onDelete: 'CASCADE', onUpdate: 'CASCADE',
+    unique: false});
+Group.belongsToMany(User, {through: UserGroupTask, onDelete: 'CASCADE', onUpdate: 'CASCADE',
+    unique: false});
 
 User.hasMany(Penalty, {
   foreignKey: {
@@ -79,7 +83,7 @@ RefreshToken.belongsTo(User, {
 
 (async () => {
     try {
-        await sequelize.sync({ alter: true });
+        await sequelize.sync({ alter: false });
         console.log('All models were synchronized successfully.');
     } catch (error) {
         console.error('Unable to synchronize the models with the database:', error);

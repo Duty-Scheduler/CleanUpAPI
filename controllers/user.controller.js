@@ -1,8 +1,10 @@
 import User from "../models/user.model.js";
 import Group from "../models/group.model.js";
 import Task from "../models/task.model.js";
+import Penalty from "../models/penalty.model.js";
 import UserGroupTask from "../models/userGroupTask.model.js";
 import cloudinary from "../lib/cloudinary.js";
+import sequelize from '../lib/db.js';
 
 export const getUserInGroup = async (req, res) => {
   const { groupId } = req.params;
@@ -44,7 +46,7 @@ export const getUserStatsInGroup = async (req, res) => {
           model: Group,
           where: { id: groupId },
           attributes: [],
-          through: { attributes: ['penalty_status'] }
+          through: { attributes: [] }
         },
         {
           model: Task,
@@ -53,6 +55,20 @@ export const getUserStatsInGroup = async (req, res) => {
         }
       ],
       attributes: ['id', 'name', 'email']
+    });
+
+    const penalties = await Penalty.findAll({
+      where: { GroupId: groupId },
+      attributes: [
+        'UserId',
+        [sequelize.fn('COUNT', sequelize.col('id')), 'penaltyCount']
+      ],
+      group: ['UserId']
+    });
+
+    const penaltyMap = {};
+    penalties.forEach(p => {
+      penaltyMap[p.UserId] = Number(p.get('penaltyCount'));
     });
 
     const result = users.map(user => {
@@ -64,11 +80,13 @@ export const getUserStatsInGroup = async (req, res) => {
         name: user.name,
         email: user.email,
         totalTasks,
-        completedTasks
+        completedTasks,
+        penaltyCount: penaltyMap[user.id] || 0
       };
     });
 
     return res.status(200).json(result);
+
   } catch (error) {
     return res.status(500).json({
       message: 'Internal Server Error',
@@ -81,22 +99,35 @@ export const getUserStats = async (req, res) => {
   const user = req.user;
 
   try {
+    // 1. Lấy tasks của user
     const tasks = await Task.findAll({
-      include: [{
-        model: User,
-        where: { id: user.id },
-        attributes: []
-      }]
+      include: [
+        {
+          model: User,
+          where: { id: user.id },
+          attributes: []
+        }
+      ],
+      attributes: ['id', 'status']
     });
 
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(t => t.status).length;
 
+    // 2. Đếm penalty của user
+    const penaltyCount = await Penalty.count({
+      where: {
+        UserId: user.id
+      }
+    });
+
     return res.status(200).json({
       userId: user.id,
       totalTasks,
-      completedTasks
+      completedTasks,
+      penaltyCount
     });
+
   } catch (error) {
     return res.status(500).json({
       message: 'Internal Server Error',

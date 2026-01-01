@@ -3,7 +3,8 @@ import {
   createPenalty,
   getPenaltyByUserIdAndGroupId,
   getMyPenalty,
-  searchPenaltyByTitle
+  searchPenaltyByTitle,
+  deletePenalty
 } from '../controllers/penalty.controller.js';
 
 import { protectedRoute } from '../middleware/auth.middleware.js';
@@ -14,6 +15,12 @@ router.post(
   '/:taskId/:groupId/:foulUserId',
   protectedRoute,
   createPenalty
+);
+
+router.delete(
+  '/:taskId/:groupId/:foulUserId',
+  protectedRoute,
+  deletePenalty
 );
 
 router.get(

@@ -77,14 +77,14 @@ export const introspect = async (req,res) => {
     })
   }
   try {
-    decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const new_refreshTokenId = uuidv4();
-    refreshToken = RefreshToken.create({
+    await RefreshToken.create({
       id: refreshTokenId,
       token: refreshToken, 
       UserId: decoded.userId
     });
-    const user = User.findByPk(decoded.userId);
+    const user = await User.findByPk(decoded.userId);
     const accessToken = generateAccessToken(user);
     const new_refreshToken = generateRefreshToken(user);
     
@@ -102,7 +102,7 @@ export const introspect = async (req,res) => {
       refreshTokenId: new_refreshTokenId
     });
   } catch (error) {
-    console.log("Error in auth.controller.js-introspect");
+    console.log("Error in auth.controller.js-introspect: " + error);
     return res.status(401).json({
         message: "Invalid RefreshToken"
     })
@@ -117,8 +117,8 @@ export const logout = async (req,res) => {
     });
   }
   try {
-    decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
-    refreshToken = RefreshToken.create({
+    decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    refreshToken = await RefreshToken.create({
       id: refreshTokenId,
       token: refreshToken, 
       UserId: decoded.userId

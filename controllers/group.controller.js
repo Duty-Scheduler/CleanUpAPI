@@ -1,6 +1,8 @@
 import Group from "../models/group.model.js";
 import UserGroupTask from "../models/userGroupTask.model.js";
-import { v4 as uuidv4 } from 'uuid';
+import jwt from "jsonwebtoken";
+import sequelize from '../lib/db.js';
+import { generateInviteToken } from "../lib/util.js";
 
 export const createGroup = async (req,res) => {
     const {title, description} = req.body;
@@ -152,10 +154,11 @@ export const createInviteToken = async (req, res) => {
             return res.status(403).json({ message: 'Forbidden' });
         }
 
-        const inviteToken = uuidv4();
+        const inviteToken = generateInviteToken(groupId);
 
         return res.status(201).json({
-            inviteToken
+            inviteToken,
+            message: "Invite Code Created Successfully Expires in 7d"
         });
     } catch (error) {
         return res.status(500).json({
@@ -166,7 +169,7 @@ export const createInviteToken = async (req, res) => {
 
 export const joinGroup = async (req, res) => {
     const user = req.user;
-    const { groupId } = req.body;
+    const { groupId, inviteToken } = req.body;
 
     if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -175,12 +178,19 @@ export const joinGroup = async (req, res) => {
     const transaction = await sequelize.transaction();
 
     try {
+        const decoded = jwt.verify(inviteToken, process.env.JWT_ACCESS_SECRET)
+        if(decoded.groupId !== groupId){
+            return res.status(403).json({
+                message: "Forbidden"
+            })
+        }
+
         const group = await Group.findByPk(groupId);
         if (!group) {
             await transaction.rollback();
             return res.status(404).json({ message: 'Group not found' });
         }
-
+        
         await group.addUser(user, {
             through: { isAdmin: false },
             transaction

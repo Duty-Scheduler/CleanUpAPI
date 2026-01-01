@@ -1,7 +1,10 @@
 import Group from "../models/group.model.js";
 import Task from "../models/task.model.js";
 import User from "../models/user.model.js";
+import sequelize from '../lib/db.js';
 import {isGroupAdmin, isUserAssignedToTask} from "../lib/authorization.js";
+import UserGroupTask from "../models/userGroupTask.model.js";
+import cloudinary from "../lib/cloudinary.js";
 
 export const getAllTaskInGroup = async (req, res) => {
   const { groupId } = req.params;
@@ -58,21 +61,20 @@ export const getMyTasks = async (req, res) => {
         }
       ]
     });
-
-    const formattedTasks = tasks.map(task => ({
-      id: task.id,
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      proof: task.proof,
-      group: task.Group,
-      penalty_status: task.Users[0].UserGroupTask.penalty_status
-    }));
+    // const formattedTasks = tasks.map(task => ({
+    //   id: task.id,
+    //   title: task.title,
+    //   description: task.description,
+    //   status: task.status,
+    //   proof: task.proof,
+    //   group: task.Group,
+    //   penalty_status: task.Users[0].UserGroupTask.penalty_status
+    // }));
 
     return res.status(200).json({
       userId: user.id,
-      total: formattedTasks.length,
-      tasks: formattedTasks
+      total: tasks.length,
+      tasks: tasks
     });
   } catch (error) {
     return res.status(500).json({
@@ -85,14 +87,20 @@ export const getMyTasks = async (req, res) => {
 export const createTask = async (req, res) => {
   const user = req.user;
   const { groupId } = req.params;
-  const { title, description } = req.body;
+  const { title, description, penalty_description, assignId } = req.body;
 
   if (!user) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  if (!title) {
-    return res.status(400).json({ message: "Missing title" });
+  if (
+    !title ||
+    !description ||
+    !penalty_description ||
+    !Array.isArray(assignId) ||
+    assignId.length === 0
+  ) {
+    return res.status(400).json({ message: "Missing or invalid parameter" });
   }
 
   const isAdmin = await isGroupAdmin(user.id, groupId);
@@ -100,21 +108,44 @@ export const createTask = async (req, res) => {
     return res.status(403).json({ message: "Forbidden: Admin only" });
   }
 
-  try {
-    const task = await Task.create({
-      title,
-      description,
-      GroupId: groupId
-    });
+  const transaction = await sequelize.transaction();
 
+  try {
+    // 1. Tạo task
+    const task = await Task.create(
+      {
+        title,
+        description,
+        penalty_description,
+        GroupId: groupId
+      },
+      { transaction }
+    );
+    // 2. Gán task cho nhiều user
+    const userGroupTasks = assignId.map(userId => ({
+      UserId: userId,
+      GroupId: groupId,
+      TaskId: task.id
+    }));
+
+    await UserGroupTask.bulkCreate(userGroupTasks, { transaction });
+    // 3. Commit
+    await transaction.commit();
     return res.status(201).json({
       message: "Task created",
       task
     });
+
   } catch (error) {
+    // 4. Rollback
+    await transaction.rollback();
+
+    console.error("Sequelize error:", error);
+    console.error("Errors:", error.errors);
+
     return res.status(500).json({
       message: "Internal Server Error",
-      error: error.message
+      error: error.errors?.map(e => e.message) || error.message
     });
   }
 };
@@ -246,7 +277,7 @@ export const uploadProof = async (req, res) => {
           uploaded_at: new Date().toISOString()
         };
 
-        task.proofs = [...task.proofs, newProof];
+        task.proof = [...task.proof, newProof];
         await task.save();
 
         return res.status(200).json({

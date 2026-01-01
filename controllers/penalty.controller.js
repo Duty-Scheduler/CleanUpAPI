@@ -74,6 +74,78 @@ export const createPenalty = async (req, res) => {
   }
 };
 
+export const deletePenalty = async (req, res) => {
+  try {
+    const requester = req.user;
+    const { taskId, groupId, foulUserId } = req.params;
+
+    if (!requester) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    if (!taskId || !groupId || !foulUserId) {
+      return res.status(400).json({ message: "Missing parameters" });
+    }
+
+    // 1. Check admin
+    const isAdmin = await isGroupAdmin(requester.id, groupId);
+    if (!isAdmin) {
+      return res.status(403).json({
+        message: "Forbidden: Admin only"
+      });
+    }
+
+    // 2. Check task tồn tại trong group
+    const task = await Task.findOne({
+      where: {
+        id: taskId,
+        GroupId: groupId
+      }
+    });
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // 3. Check user có được assign task không
+    const isAssigned = await isUserAssignedToTask(foulUserId, taskId);
+    if (!isAssigned) {
+      return res.status(403).json({
+        message: "User is not assigned to this task"
+      });
+    }
+
+    // 4. Tìm penalty
+    const penalty = await Penalty.findOne({
+      where: {
+        TaskId: taskId,
+        UserId: foulUserId,
+        GroupId: groupId
+      }
+    });
+
+    if (!penalty) {
+      return res.status(404).json({
+        message: "Penalty not found"
+      });
+    }
+
+    // 5. Xóa penalty
+    await penalty.destroy();
+
+    return res.status(200).json({
+      message: "Deleted penalty successfully",
+      penaltyId: penalty.id
+    });
+
+  } catch (error) {
+    console.error("deletePenalty error:", error);
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
 export const getPenaltyByUserIdAndGroupId = async (req, res) => {
   try {
     const requester = req.user;
