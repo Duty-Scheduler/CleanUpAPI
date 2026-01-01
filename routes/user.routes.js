@@ -94,7 +94,8 @@
  *                   email:
  *                     type: string
  *                   totalTasks:
- *                     type: integer
+ *                     type: string
+ *                     format: uuid
  *                     description: Total number of tasks assigned to user
  *                   completedTasks:
  *                     type: integer

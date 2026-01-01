@@ -73,7 +73,8 @@
  *                     type: object
  *                     properties:
  *                       id:
- *                         type: integer
+ *                         type: string
+ *                         format: uuid
  *                       title:
  *                         type: string
  *                       description:
@@ -102,7 +103,8 @@
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the group to leave
  *     responses:
  *       200:
@@ -136,7 +138,8 @@
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the group to delete
  *     responses:
  *       200:
@@ -172,7 +175,8 @@
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the group
  *     responses:
  *       201:
@@ -214,7 +218,8 @@
  *               - inviteToken
  *             properties:
  *               groupId:
- *                 type: integer
+ *                 type: string
+ *                 format: uuid
  *                 description: ID of the group to join
  *               inviteToken:
  *                 type: string

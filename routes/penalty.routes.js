@@ -18,19 +18,22 @@
  *         name: taskId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the task
  *       - in: path
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the group
  *       - in: path
  *         name: foulUserId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the user who committed the foul
  *     responses:
  *       201:
@@ -67,19 +70,22 @@
  *         name: taskId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the task
  *       - in: path
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the group
  *       - in: path
  *         name: foulUserId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the user
  *     responses:
  *       200:
@@ -93,7 +99,8 @@
  *                   type: string
  *                   example: Deleted penalty successfully
  *                 penaltyId:
- *                   type: integer
+ *                   type: string
+ *                   format: uuid
  *       400:
  *         description: Missing parameters
  *       401:
@@ -123,7 +130,8 @@
  *               type: object
  *               properties:
  *                 userId:
- *                   type: integer
+ *                   type: string
+ *                   format: uuid
  *                 total:
  *                   type: integer
  *                 penalties:
@@ -132,7 +140,8 @@
  *                     type: object
  *                     properties:
  *                       id:
- *                         type: integer
+ *                         type: string
+ *                         format: uuid
  *                       title:
  *                         type: string
  *                       description:
@@ -144,14 +153,16 @@
  *                         type: object
  *                         properties:
  *                           id:
- *                             type: integer
+ *                             type: string
+ *                             format: uuid
  *                           title:
  *                             type: string
  *                       Group:
  *                         type: object
  *                         properties:
  *                           id:
- *                             type: integer
+ *                             type: string
+ *                             format: uuid
  *                           title:
  *                             type: string
  *       401:
@@ -173,13 +184,15 @@
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the group
  *       - in: path
  *         name: userId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the user
  *     responses:
  *       200:
@@ -201,7 +214,8 @@
  *                     type: object
  *                     properties:
  *                       id:
- *                         type: integer
+ *                         type: string
+ *                         format: uuid
  *                       title:
  *                         type: string
  *                       description:
@@ -213,14 +227,16 @@
  *                         type: object
  *                         properties:
  *                           id:
- *                             type: integer
+ *                             type: string
+ *                             format: uuid
  *                           title:
  *                             type: string
  *                       Group:
  *                         type: object
  *                         properties:
  *                           id:
- *                             type: integer
+ *                             type: string
+ *                             format: uuid
  *                           title:
  *                             type: string
  *       400:
@@ -246,7 +262,8 @@
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the group
  *       - in: query
  *         name: q

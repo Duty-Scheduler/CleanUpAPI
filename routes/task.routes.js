@@ -18,7 +18,8 @@
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the group
  *     responses:
  *       200:
@@ -36,7 +37,8 @@
  *                     type: object
  *                     properties:
  *                       id:
- *                         type: integer
+ *                         type: string
+ *                         format: uuid
  *                       title:
  *                         type: string
  *                       description:
@@ -51,7 +53,8 @@
  *                           type: object
  *                           properties:
  *                             id:
- *                               type: integer
+ *                               type: string
+ *                               format: uuid
  *                             name:
  *                               type: string
  *                             email:
@@ -75,7 +78,8 @@
  *         name: groupId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the group
  *     requestBody:
  *       required: true
@@ -101,7 +105,8 @@
  *               assignId:
  *                 type: array
  *                 items:
- *                   type: integer
+ *                   type: string
+ *                   format: uuid
  *                 description: Array of user IDs to assign this task
  *     responses:
  *       201:
@@ -143,7 +148,8 @@
  *               type: object
  *               properties:
  *                 userId:
- *                   type: integer
+ *                   type: string
+ *                   format: uuid
  *                 total:
  *                   type: integer
  *                 tasks:
@@ -152,7 +158,8 @@
  *                     type: object
  *                     properties:
  *                       id:
- *                         type: integer
+ *                         type: string
+ *                         format: uuid
  *                       title:
  *                         type: string
  *                       description:
@@ -165,7 +172,8 @@
  *                         type: object
  *                         properties:
  *                           id:
- *                             type: integer
+ *                             type: string
+ *                             format: uuid
  *                           title:
  *                             type: string
  *       401:
@@ -187,7 +195,8 @@
  *         name: taskId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the task to update
  *     requestBody:
  *       required: true
@@ -238,7 +247,8 @@
  *         name: taskId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the task to delete
  *     responses:
  *       200:
@@ -274,7 +284,8 @@
  *         name: taskId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: ID of the task
  *     requestBody:
  *       required: true
@@ -311,7 +322,8 @@
  *                       type: string
  *                       format: date-time
  *                 taskId:
- *                   type: integer
+ *                   type: string
+ *                   format: uuid
  *       400:
  *         description: No image file provided or missing parameters
  *       401:
