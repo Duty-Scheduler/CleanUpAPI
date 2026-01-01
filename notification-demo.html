@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo Socket.IO - Thông báo Realtime</title>
+    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        margin-bottom: 10px;
+        font-size: 28px;
+      }
+
+      .status {
+        padding: 10px 20px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      .status.connected {
+        background: #10b981;
+      }
+
+      .status.disconnected {
+        background: #ef4444;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .connection-section {
+        background: #f3f4f6;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+
+      .input-group {
+        margin-bottom: 15px;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #374151;
+      }
+
+      .input-group input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      .input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .notifications-section {
+        margin-top: 30px;
+      }
+
+      .notifications-section h2 {
+        color: #374151;
+        margin-bottom: 15px;
+        font-size: 22px;
+      }
+
+      .notifications-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .notification-item {
+        background: #f9fafb;
+        border-left: 4px solid #667eea;
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .notification-item.TASK_ASSIGNED {
+        border-left-color: #3b82f6;
+      }
+
+      .notification-item.TASK_COMPLETED {
+        border-left-color: #10b981;
+      }
+
+      .notification-item.PENALTY_RECEIVED {
+        border-left-color: #ef4444;
+      }
+
+      .notification-title {
+        font-weight: bold;
+        color: #1f2937;
+        margin-bottom: 5px;
+        font-size: 16px;
+      }
+
+      .notification-message {
+        color: #6b7280;
+        margin-bottom: 5px;
+      }
+
+      .notification-time {
+        color: #9ca3af;
+        font-size: 12px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #9ca3af;
+      }
+
+      .empty-state svg {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🔔 Demo Thông Báo Realtime</h1>
+        <div class="status disconnected" id="statusBadge">Chưa kết nối</div>
+      </div>
+
+      <div class="content">
+        <div class="connection-section">
+          <h3 style="margin-bottom: 15px; color: #374151">Kết nối Socket.IO</h3>
+          <div class="input-group">
+            <label for="serverUrl">Server URL</label>
+            <input
+              type="text"
+              id="serverUrl"
+              placeholder="http://localhost:3000"
+              value="http://localhost:3000"
+            />
+          </div>
+          <div class="input-group">
+            <label for="userId">User ID (UUID)</label>
+            <input
+              type="text"
+              id="userId"
+              placeholder="Nhập User ID (UUID) của bạn"
+              value=""
+            />
+          </div>
+          <button id="connectBtn" onclick="connectSocket()">Kết nối</button>
+          <button
+            id="disconnectBtn"
+            onclick="disconnectSocket()"
+            disabled
+            style="margin-left: 10px; background: #ef4444"
+          >
+            Ngắt kết nối
+          </button>
+        </div>
+
+        <div class="notifications-section">
+          <h2>Thông báo của bạn</h2>
+          <div class="notifications-list" id="notificationsList">
+            <div class="empty-state">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                ></path>
+              </svg>
+              <p>Chưa có thông báo nào</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let socket = null;
+      let userId = null;
+
+      function updateStatus(connected) {
+        const statusBadge = document.getElementById("statusBadge");
+        const connectBtn = document.getElementById("connectBtn");
+        const disconnectBtn = document.getElementById("disconnectBtn");
+
+        if (connected) {
+          statusBadge.textContent = "Đã kết nối";
+          statusBadge.className = "status connected";
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+        } else {
+          statusBadge.textContent = "Chưa kết nối";
+          statusBadge.className = "status disconnected";
+          connectBtn.disabled = false;
+          disconnectBtn.disabled = true;
+        }
+      }
+
+      function connectSocket() {
+        const serverUrl = document.getElementById("serverUrl").value;
+        userId = document.getElementById("userId").value;
+
+        if (!serverUrl || !userId) {
+          alert("Vui lòng nhập đầy đủ thông tin");
+          return;
+        }
+
+        socket = io(serverUrl);
+
+        socket.on("connect", () => {
+          console.log("Connected to server");
+          updateStatus(true);
+
+          // Đăng ký user ID
+          socket.emit("register", userId);
+          addNotification({
+            type: "SYSTEM",
+            title: "Kết nối thành công",
+            message: `Đã kết nối đến server với User ID: ${userId}`,
+            createdAt: new Date(),
+          });
+        });
+
+        socket.on("disconnect", () => {
+          console.log("Disconnected from server");
+          updateStatus(false);
+          addNotification({
+            type: "SYSTEM",
+            title: "Mất kết nối",
+            message: "Đã ngắt kết nối với server",
+            createdAt: new Date(),
+          });
+        });
+
+        socket.on("notification", (notification) => {
+          console.log("Received notification:", notification);
+          addNotification(notification);
+
+          // Hiển thị notification ở trình duyệt nếu được phép
+          if (
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            new Notification(notification.title, {
+              body: notification.message,
+              icon: "🔔",
+            });
+          }
+        });
+      }
+
+      function disconnectSocket() {
+        if (socket) {
+          socket.disconnect();
+          socket = null;
+          updateStatus(false);
+        }
+      }
+
+      function addNotification(notification) {
+        const notificationsList = document.getElementById("notificationsList");
+
+        // Xóa empty state nếu có
+        const emptyState = notificationsList.querySelector(".empty-state");
+        if (emptyState) {
+          emptyState.remove();
+        }
+
+        const notificationItem = document.createElement("div");
+        notificationItem.className = `notification-item ${notification.type}`;
+
+        const time = new Date(notification.createdAt).toLocaleString("vi-VN");
+
+        notificationItem.innerHTML = `
+                <div class="notification-title">${notification.title}</div>
+                <div class="notification-message">${notification.message}</div>
+                <div class="notification-time">${time}</div>
+            `;
+
+        notificationsList.insertBefore(
+          notificationItem,
+          notificationsList.firstChild
+        );
+      }
+
+      // Yêu cầu quyền hiển thị notification
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    </script>
+  </body>
+</html>

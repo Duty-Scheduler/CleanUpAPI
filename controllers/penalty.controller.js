@@ -2,8 +2,13 @@ import Group from "../models/group.model.js";
 import Task from "../models/task.model.js";
 import User from "../models/user.model.js";
 import { Op } from "sequelize";
-import {isGroupAdmin, isUserAssignedToTask, isGroupMember} from "../lib/authorization.js";
+import {
+  isGroupAdmin,
+  isUserAssignedToTask,
+  isGroupMember,
+} from "../lib/authorization.js";
 import Penalty from "../models/penalty.model.js";
+import { createNotification } from "./notification.controller.js";
 
 export const createPenalty = async (req, res) => {
   try {
@@ -21,15 +26,15 @@ export const createPenalty = async (req, res) => {
     const isAdmin = await isGroupAdmin(requester.id, groupId);
     if (!isAdmin) {
       return res.status(403).json({
-        message: "Forbidden: Admin only"
+        message: "Forbidden: Admin only",
       });
     }
 
     const task = await Task.findOne({
       where: {
         id: taskId,
-        GroupId: groupId
-      }
+        GroupId: groupId,
+      },
     });
 
     if (!task) {
@@ -39,17 +44,17 @@ export const createPenalty = async (req, res) => {
     const isAssigned = await isUserAssignedToTask(foulUserId, taskId);
     if (!isAssigned) {
       return res.status(403).json({
-        message: "User is not assigned to this task"
+        message: "User is not assigned to this task",
       });
     }
 
     const existedPenalty = await Penalty.findOne({
-      where: { TaskId: taskId }
+      where: { TaskId: taskId },
     });
 
     if (existedPenalty) {
       return res.status(409).json({
-        message: "Penalty already exists for this task"
+        message: "Penalty already exists for this task",
       });
     }
 
@@ -58,18 +63,27 @@ export const createPenalty = async (req, res) => {
       description: `${task.penalty_description}`,
       UserId: foulUserId,
       TaskId: taskId,
-      GroupId: groupId
+      GroupId: groupId,
     });
+
+    // Gửi thông báo cho user bị phạt
+    await createNotification(
+      foulUserId,
+      "PENALTY_RECEIVED",
+      "Bạn đã nhận phạt",
+      `Bạn đã bị phạt do: ${task.penalty_description}`,
+      penalty.id,
+      "PENALTY"
+    );
 
     return res.status(201).json({
       message: "Created penalty successfully",
-      penalty
+      penalty,
     });
-
   } catch (error) {
     console.error("createPenalty error:", error);
     return res.status(500).json({
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
@@ -91,7 +105,7 @@ export const deletePenalty = async (req, res) => {
     const isAdmin = await isGroupAdmin(requester.id, groupId);
     if (!isAdmin) {
       return res.status(403).json({
-        message: "Forbidden: Admin only"
+        message: "Forbidden: Admin only",
       });
     }
 
@@ -99,8 +113,8 @@ export const deletePenalty = async (req, res) => {
     const task = await Task.findOne({
       where: {
         id: taskId,
-        GroupId: groupId
-      }
+        GroupId: groupId,
+      },
     });
 
     if (!task) {
@@ -111,7 +125,7 @@ export const deletePenalty = async (req, res) => {
     const isAssigned = await isUserAssignedToTask(foulUserId, taskId);
     if (!isAssigned) {
       return res.status(403).json({
-        message: "User is not assigned to this task"
+        message: "User is not assigned to this task",
       });
     }
 
@@ -120,13 +134,13 @@ export const deletePenalty = async (req, res) => {
       where: {
         TaskId: taskId,
         UserId: foulUserId,
-        GroupId: groupId
-      }
+        GroupId: groupId,
+      },
     });
 
     if (!penalty) {
       return res.status(404).json({
-        message: "Penalty not found"
+        message: "Penalty not found",
       });
     }
 
@@ -135,13 +149,12 @@ export const deletePenalty = async (req, res) => {
 
     return res.status(200).json({
       message: "Deleted penalty successfully",
-      penaltyId: penalty.id
+      penaltyId: penalty.id,
     });
-
   } catch (error) {
     console.error("deletePenalty error:", error);
     return res.status(500).json({
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
@@ -162,38 +175,38 @@ export const getPenaltyByUserIdAndGroupId = async (req, res) => {
     const isMember = await isGroupMember(requester.id, groupId);
     if (!isMember) {
       return res.status(403).json({
-        message: "Forbidden: Group members only"
+        message: "Forbidden: Group members only",
       });
     }
 
     const penalties = await Penalty.findAll({
       where: {
         UserId: userId,
-        GroupId: groupId
+        GroupId: groupId,
       },
       include: [
         {
           model: Task,
-          attributes: ["id", "title"]
+          attributes: ["id", "title"],
         },
         {
           model: Group,
-          attributes: ["id", "title"]
-        }
+          attributes: ["id", "title"],
+        },
       ],
-      order: [["date", "DESC"]]
+      order: [["date", "DESC"]],
     });
 
     return res.status(200).json({
       userId,
       groupId,
       total: penalties.length,
-      penalties
+      penalties,
     });
   } catch (error) {
     console.error("getPenaltyByUserIdAndGroupId error:", error);
     return res.status(500).json({
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
@@ -211,29 +224,28 @@ export const getMyPenalty = async (req, res) => {
       include: [
         {
           model: Task,
-          attributes: ['id', 'title']
+          attributes: ["id", "title"],
         },
         {
           model: Group,
-          attributes: ['id', 'title']
-        }
+          attributes: ["id", "title"],
+        },
       ],
-      order: [['date', 'DESC']]
+      order: [["date", "DESC"]],
     });
 
     return res.status(200).json({
       userId: user.id,
       total: penalties.length,
-      penalties
+      penalties,
     });
   } catch (error) {
     console.error("getMyPenalty error:", error);
     return res.status(500).json({
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
-
 
 export const searchPenaltyByTitle = async (req, res) => {
   try {
@@ -257,22 +269,22 @@ export const searchPenaltyByTitle = async (req, res) => {
     const penalties = await Penalty.findAll({
       where: {
         title: {
-          [Op.like]: `%${q}%`
+          [Op.like]: `%${q}%`,
         },
-        GroupId: groupId
+        GroupId: groupId,
       },
-      order: [['date', 'DESC']]
+      order: [["date", "DESC"]],
     });
 
     return res.status(200).json({
       query: q,
       total: penalties.length,
-      penalties
+      penalties,
     });
   } catch (error) {
     console.error("searchPenaltyByTitle error:", error);
     return res.status(500).json({
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
   }
 };
