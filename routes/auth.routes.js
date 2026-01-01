@@ -4,6 +4,7 @@
  *   name: Auth
  *   description: Authentication endpoints
  */
+
 /**
  * @swagger
  * /api/v1/auth/google:
@@ -16,6 +17,8 @@
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - idToken
  *             properties:
  *               idToken:
  *                 type: string
@@ -30,14 +33,33 @@
  *               properties:
  *                 user:
  *                   type: object
- *                   description: Authenticated user info
+ *                   properties:
+ *                     googleId:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     lastname:
+ *                       type: string
+ *                     avatar:
+ *                       type: string
+ *                       nullable: true
+ *                     provider:
+ *                       type: string
+ *                       example: google
  *                 accessToken:
  *                   type: string
  *                 refreshToken:
  *                   type: string
  *                 refreshTokenId:
  *                   type: string
+ *       400:
+ *         description: Missing idToken
+ *       401:
+ *         description: Google auth failed
  */
+
 /**
  * @swagger
  * /api/v1/auth/introspect:
@@ -50,6 +72,9 @@
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - refreshToken
+ *               - refreshTokenId
  *             properties:
  *               refreshToken:
  *                 type: string
@@ -59,7 +84,7 @@
  *                 description: Client-side identifier for the refresh token
  *     responses:
  *       200:
- *         description: Token info
+ *         description: Token refreshed successfully
  *         content:
  *           application/json:
  *             schema:
@@ -67,7 +92,21 @@
  *               properties:
  *                 user:
  *                   type: object
- *                   description: Authenticated user info
+ *                   properties:
+ *                     googleId:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     lastname:
+ *                       type: string
+ *                     avatar:
+ *                       type: string
+ *                       nullable: true
+ *                     provider:
+ *                       type: string
+ *                       example: google
  *                 accessToken:
  *                   type: string
  *                 refreshToken:
@@ -77,8 +116,9 @@
  *       400:
  *         description: Missing refreshToken or refreshTokenId
  *       401:
- *         description: Invalid or revoked refresh token
+ *         description: Invalid refresh token or refresh token revoked/expired
  */
+
 /**
  * @swagger
  * /api/v1/auth/logout:
@@ -93,6 +133,9 @@
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - refreshToken
+ *               - refreshTokenId
  *             properties:
  *               refreshToken:
  *                 type: string
@@ -103,11 +146,20 @@
  *     responses:
  *       200:
  *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Logout successful
  *       400:
  *         description: Missing refreshToken or refreshTokenId
- *       500:
- *         description: Bad request / server error
+ *       401:
+ *         description: Invalid refresh token
  */
+
 import express from "express";
 import {
   googleAuth,
