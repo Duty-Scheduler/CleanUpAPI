@@ -31,7 +31,7 @@ const UserGroupTask  = sequelize.define('UserGroupTask', {
     },
     TaskId: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true,
         unique: false
     }
     }, {
