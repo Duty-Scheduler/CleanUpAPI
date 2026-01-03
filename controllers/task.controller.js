@@ -1,10 +1,11 @@
 import Group from "../models/group.model.js";
 import Task from "../models/task.model.js";
 import User from "../models/user.model.js";
-import sequelize from '../lib/db.js';
-import {isGroupAdmin, isUserAssignedToTask} from "../lib/authorization.js";
+import sequelize from "../lib/db.js";
+import { isGroupAdmin, isUserAssignedToTask } from "../lib/authorization.js";
 import UserGroupTask from "../models/userGroupTask.model.js";
 import cloudinary from "../lib/cloudinary.js";
+import { createNotification } from "./notification.controller.js";
 
 export const getAllTaskInGroup = async (req, res) => {
   const { groupId } = req.params;
@@ -12,26 +13,26 @@ export const getAllTaskInGroup = async (req, res) => {
   try {
     const tasks = await Task.findAll({
       where: { GroupId: groupId },
-      attributes: ['id', 'title', 'description', 'status', 'proof'],
+      attributes: ["id", "title", "description", "status", "proof"],
       include: [
         {
           model: User,
-          attributes: ['id', 'name', 'email', 'avatar'],
+          attributes: ["id", "name", "email", "avatar"],
           through: {
-            attributes: ['penalty_status']
-          }
-        }
-      ]
+            attributes: ["penalty_status"],
+          },
+        },
+      ],
     });
 
     return res.status(200).json({
       groupId,
-      tasks
+      tasks,
     });
   } catch (error) {
     return res.status(500).json({
-      message: 'Internal Server Error',
-      error: error.message
+      message: "Internal Server Error",
+      error: error.message,
     });
   }
 };
@@ -40,26 +41,26 @@ export const getMyTasks = async (req, res) => {
   const user = req.user;
 
   if (!user) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   try {
     const tasks = await Task.findAll({
-      attributes: ['id', 'title', 'description', 'status', 'proof'],
+      attributes: ["id", "title", "description", "status", "proof"],
       include: [
         {
           model: User,
           where: { id: user.id },
           attributes: [],
           through: {
-            attributes: ['penalty_status']
-          }
+            attributes: ["penalty_status"],
+          },
         },
         {
           model: Group,
-          attributes: ['id', 'title']
-        }
-      ]
+          attributes: ["id", "title"],
+        },
+      ],
     });
     // const formattedTasks = tasks.map(task => ({
     //   id: task.id,
@@ -74,12 +75,12 @@ export const getMyTasks = async (req, res) => {
     return res.status(200).json({
       userId: user.id,
       total: tasks.length,
-      tasks: tasks
+      tasks: tasks,
     });
   } catch (error) {
     return res.status(500).json({
-      message: 'Internal Server Error',
-      error: error.message
+      message: "Internal Server Error",
+      error: error.message,
     });
   }
 };
@@ -117,25 +118,37 @@ export const createTask = async (req, res) => {
         title,
         description,
         penalty_description,
-        GroupId: groupId
+        GroupId: groupId,
       },
       { transaction }
     );
     // 2. Gán task cho nhiều user
-    const userGroupTasks = assignId.map(userId => ({
+    const userGroupTasks = assignId.map((userId) => ({
       UserId: userId,
       GroupId: groupId,
-      TaskId: task.id
+      TaskId: task.id,
     }));
 
     await UserGroupTask.bulkCreate(userGroupTasks, { transaction });
     // 3. Commit
     await transaction.commit();
+
+    // 4. Gửi thông báo cho các user được gán task
+    for (const userId of assignId) {
+      await createNotification(
+        userId,
+        "TASK_ASSIGNED",
+        "Task mới được gán",
+        `Bạn được gán task: ${title}`,
+        task.id,
+        "TASK"
+      );
+    }
+
     return res.status(201).json({
       message: "Task created",
-      task
+      task,
     });
-
   } catch (error) {
     // 4. Rollback
     await transaction.rollback();
@@ -145,7 +158,7 @@ export const createTask = async (req, res) => {
 
     return res.status(500).json({
       message: "Internal Server Error",
-      error: error.errors?.map(e => e.message) || error.message
+      error: error.errors?.map((e) => e.message) || error.message,
     });
   }
 };
@@ -178,20 +191,35 @@ export const updateTask = async (req, res) => {
 
     if (Object.keys(updatePayload).length === 0) {
       return res.status(400).json({
-        message: "No valid fields provided for update"
+        message: "No valid fields provided for update",
       });
     }
 
     await task.update(updatePayload);
 
+    // Gửi thông báo nếu task được hoàn thành
+    if (status === "completed") {
+      const assignedUsers = await task.getUsers();
+      for (const assignedUser of assignedUsers) {
+        await createNotification(
+          assignedUser.id,
+          "TASK_COMPLETED",
+          "Task đã hoàn thành",
+          `Task "${task.title}" đã được đánh dấu hoàn thành`,
+          task.id,
+          "TASK"
+        );
+      }
+    }
+
     return res.status(200).json({
       message: "Task updated",
-      task
+      task,
     });
   } catch (error) {
     return res.status(500).json({
       message: "Internal Server Error",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -218,12 +246,12 @@ export const deleteTask = async (req, res) => {
     await task.destroy();
 
     return res.status(200).json({
-      message: "Task deleted"
+      message: "Task deleted",
     });
   } catch (error) {
     return res.status(500).json({
       message: "Internal Server Error",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -232,15 +260,15 @@ export const uploadProof = async (req, res) => {
   const { taskId } = req.params;
 
   if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' });
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   if (!req.file) {
-    return res.status(400).json({ message: 'No image file provided' });
+    return res.status(400).json({ message: "No image file provided" });
   }
 
   if (!taskId) {
-    return res.status(400).json({ message: 'Missing parameters' });
+    return res.status(400).json({ message: "Missing parameters" });
   }
 
   const userId = req.user.id;
@@ -249,50 +277,50 @@ export const uploadProof = async (req, res) => {
     const isAssigned = await isUserAssignedToTask(userId, taskId);
     if (!isAssigned) {
       return res.status(403).json({
-        message: 'User not allowed to upload proof for this task'
+        message: "User not allowed to upload proof for this task",
       });
     }
 
     const task = await Task.findByPk(taskId);
     if (!task) {
-      return res.status(404).json({ message: 'Task not found' });
+      return res.status(404).json({ message: "Task not found" });
     }
 
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        resource_type: 'image',
-        folder: 'task_proofs'
+        resource_type: "image",
+        folder: "task_proofs",
       },
       async (error, result) => {
         if (error) {
-          console.error('Cloudinary error:', error);
+          console.error("Cloudinary error:", error);
           return res.status(500).json({
-            message: 'Error uploading image'
+            message: "Error uploading image",
           });
         }
 
         const newProof = {
           img: result.secure_url,
           user_email: req.user.email,
-          uploaded_at: new Date().toISOString()
+          uploaded_at: new Date().toISOString(),
         };
 
         task.proof = [...task.proof, newProof];
         await task.save();
 
         return res.status(200).json({
-          message: 'Proof uploaded successfully',
+          message: "Proof uploaded successfully",
           proof: newProof,
-          taskId: task.id
+          taskId: task.id,
         });
       }
     );
 
     uploadStream.end(req.file.buffer);
   } catch (error) {
-    console.error('uploadProof error:', error);
+    console.error("uploadProof error:", error);
     return res.status(500).json({
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
