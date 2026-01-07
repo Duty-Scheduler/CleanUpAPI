@@ -168,7 +168,7 @@ export const createTask = async (req, res) => {
     return res.status(400).json({ message: "Missing Group Id" });
   }
   for (const userId of assignId) {
-    const isMember = await isGroupMember(userId);
+    const isMember = await isGroupMember(userId, groupId);
     if (!isMember) {
       return res.status(403).json({
         message: "Forbidden: Group members only",
