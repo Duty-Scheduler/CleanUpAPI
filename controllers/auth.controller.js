@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { OAuth2Client } from "google-auth-library";
 import User from "../models/user.model.js";
