@@ -160,7 +160,14 @@ export const createTask = async (req, res) => {
   if (!user) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-
+  assignId.map((userId) => {
+    const isMember = isGroupMember(userId);
+    if(!isMember){
+      return res.status(403).json({
+        message: "Forbidden: Group members only",
+      });
+    }
+  });
   if (
     !title ||
     !description ||
