@@ -159,18 +159,155 @@
  *       401:
  *         description: Invalid refresh token
  */
+/**
+ * @swagger
+ * /api/v1/auth/register:
+ *   post:
+ *     summary: Register with email and password
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - name
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: StrongPassword123
+ *               name:
+ *                 type: string
+ *                 example: John
+ *               lastname:
+ *                 type: string
+ *                 example: Doe
+ *     responses:
+ *       201:
+ *         description: Register successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     lastname:
+ *                       type: string
+ *                       nullable: true
+ *                     avatar:
+ *                       type: string
+ *                     provider:
+ *                       type: string
+ *                       example: local
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *                 refreshTokenId:
+ *                   type: string
+ *       400:
+ *         description: Missing required fields
+ *       409:
+ *         description: Email already exists
+ *       500:
+ *         description: Register failed
+ */
+/**
+ * @swagger
+ * /api/v1/auth/login:
+ *   post:
+ *     summary: Login with email and password
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: StrongPassword123
+ *     responses:
+ *       200:
+ *         description: Login successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     email:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     lastname:
+ *                       type: string
+ *                       nullable: true
+ *                     avatar:
+ *                       type: string
+ *                     provider:
+ *                       type: string
+ *                       example: local
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *                 refreshTokenId:
+ *                   type: string
+ *       400:
+ *         description: Missing email or password
+ *       401:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Login failed
+ */
 
 import express from "express";
 import {
   googleAuth,
   introspect,
   logout,
+  login,
+  register
 } from "../controllers/auth.controller.js";
 import { protectedRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 router.post("/google", googleAuth);
+router.post("/login", login);
+router.post("/register", register);
 router.post("/introspect", introspect);
 router.post("/logout", protectedRoute, logout);
 
