@@ -12,7 +12,9 @@ export const getTasksByDate = async (req, res) => {
   const user = req.user;
   const { groupId } = req.params;
   const { date } = req.query;
-  
+  if(!groupId){
+    return res.status(400).json({ message: "Missing Group Id" });
+  }
   if (!user) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -76,7 +78,9 @@ export const getTasksByDate = async (req, res) => {
 
 export const getAllTaskInGroup = async (req, res) => {
   const { groupId } = req.params;
-
+  if(!groupId){
+    return res.status(400).json({ message: "Missing Group Id" });
+  }
   try {
     const tasks = await Task.findAll({
       where: { GroupId: groupId },
@@ -160,14 +164,17 @@ export const createTask = async (req, res) => {
   if (!user) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  assignId.map((userId) => {
-    const isMember = isGroupMember(userId);
-    if(!isMember){
+  if(!groupId){
+    return res.status(400).json({ message: "Missing Group Id" });
+  }
+  for (const userId of assignId) {
+    const isMember = await isGroupMember(userId);
+    if (!isMember) {
       return res.status(403).json({
         message: "Forbidden: Group members only",
       });
     }
-  });
+  }
   if (
     !title ||
     !description ||

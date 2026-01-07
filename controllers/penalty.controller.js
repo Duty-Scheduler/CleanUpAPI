@@ -252,7 +252,9 @@ export const searchPenaltyByTitle = async (req, res) => {
     const { groupId } = req.params;
     const { q } = req.query;
     const user = req.user;
-
+    if(!groupId){
+      return res.status(400).json({ message: "Missing Group Id" });
+    }
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }

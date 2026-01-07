@@ -13,6 +13,9 @@ import {
 
 export const getUserInGroup = async (req, res) => {
   const { groupId } = req.params;
+  if(!groupId){
+    return res.status(400).json({ message: "Missing Group Id" });
+  }
   const isMember = await isGroupMember(req.user.id, groupId);
   if (!isMember) {
     return res.status(403).json({
@@ -49,6 +52,9 @@ export const getUserInGroup = async (req, res) => {
 
 export const getUserStatsInGroup = async (req, res) => {
   const { groupId } = req.params;
+  if(!groupId){
+    return res.status(400).json({ message: "Missing Group Id" });
+  }
   const isMember = await isGroupMember(req.user.id, groupId);
   if (!isMember) {
     return res.status(403).json({

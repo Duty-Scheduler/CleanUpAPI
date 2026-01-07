@@ -64,7 +64,9 @@ export const getJoinedGroup = async (req, res) => {
 export const leaveGroup = async (req, res) => {
     const user = req.user;
     const { groupId } = req.params;
-
+    if(!groupId){
+        return res.status(400).json({ message: "Missing Group Id" });
+    }
     if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -95,7 +97,9 @@ export const leaveGroup = async (req, res) => {
 export const deleteGroup = async (req, res) => {
     const user = req.user;
     const { groupId } = req.params;
-
+    if(!groupId){
+        return res.status(400).json({ message: "Missing Group Id" });
+    }
     if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -139,7 +143,9 @@ export const deleteGroup = async (req, res) => {
 export const createInviteToken = async (req, res) => {
     const user = req.user;
     const { groupId } = req.params;
-
+    if(!groupId){
+        return res.status(400).json({ message: "Missing Group Id" });
+    }
     if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -173,7 +179,9 @@ export const createInviteToken = async (req, res) => {
 export const joinGroup = async (req, res) => {
     const user = req.user;
     const { groupId, inviteToken } = req.body;
-
+    if(!groupId){
+        return res.status(400).json({ message: "Missing Group Id" });
+    }
     if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
