@@ -1,11 +1,78 @@
 import Group from "../models/group.model.js";
 import Task from "../models/task.model.js";
 import User from "../models/user.model.js";
+import { Op } from "sequelize";
 import sequelize from "../lib/db.js";
-import { isGroupAdmin, isUserAssignedToTask } from "../lib/authorization.js";
+import { isGroupAdmin, isUserAssignedToTask, isGroupMember } from "../lib/authorization.js";
 import UserGroupTask from "../models/userGroupTask.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import { createNotification } from "./notification.controller.js";
+
+export const getTasksByDate = async (req, res) => {
+  const user = req.user;
+  const { groupId } = req.params;
+  const { date } = req.query;
+  
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  if (!date) {
+    return res.status(400).json({
+      message: "Missing required query param: date (YYYY-MM-DD)",
+    });
+  }
+  const isMember = await isGroupMember(user.id, groupId);
+  if (!isMember) {
+    return res.status(403).json({
+      message: "Forbidden: Group members only",
+    });
+  }
+  // Parse date
+  const startDate = new Date(`${date}T00:00:00.000Z`);
+  const endDate = new Date(`${date}T23:59:59.999Z`);
+
+  if (isNaN(startDate.getTime())) {
+    return res.status(400).json({
+      message: "Invalid date format. Use YYYY-MM-DD",
+    });
+  }
+
+  try {
+    const tasks = await Task.findAll({
+      where: {
+        GroupId: groupId,
+        createdAt: {
+          [Op.between]: [startDate, endDate],
+        },
+      },
+      attributes: ["id", "title", "description", "status", "proof", "createdAt"],
+      include: [
+        {
+          model: User,
+          attributes: ["id", "name", "email", "avatar"],
+          through: {
+            attributes: ["penalty_status"],
+          },
+        },
+      ],
+      order: [["createdAt", "ASC"]],
+    });
+
+    return res.status(200).json({
+      groupId,
+      date,
+      total: tasks.length,
+      tasks,
+    });
+  } catch (error) {
+    console.error("getTasksByDate error:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
 
 export const getAllTaskInGroup = async (req, res) => {
   const { groupId } = req.params;

@@ -54,6 +54,8 @@
  *                             type: boolean
  *                           penalty_status:
  *                             type: boolean
+*                 length:
+*                    type: integer
  *       404:
  *         description: Group not found
  *       500:

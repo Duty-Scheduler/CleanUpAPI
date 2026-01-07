@@ -5,10 +5,20 @@ import Penalty from "../models/penalty.model.js";
 import UserGroupTask from "../models/userGroupTask.model.js";
 import cloudinary from "../lib/cloudinary.js";
 import sequelize from '../lib/db.js';
+import {
+  isGroupAdmin,
+  isUserAssignedToTask,
+  isGroupMember,
+} from "../lib/authorization.js";
 
 export const getUserInGroup = async (req, res) => {
   const { groupId } = req.params;
-
+  const isMember = await isGroupMember(req.user.id, groupId);
+  if (!isMember) {
+    return res.status(403).json({
+      message: "Forbidden: Group members only",
+    });
+  }
   try {
     const group = await Group.findByPk(groupId, {
       include: [{
@@ -26,7 +36,8 @@ export const getUserInGroup = async (req, res) => {
 
     return res.status(200).json({
       groupId,
-      users: group.Users
+      users: group.Users,
+      length: group.Users.length
     });
   } catch (error) {
     return res.status(500).json({
@@ -38,7 +49,12 @@ export const getUserInGroup = async (req, res) => {
 
 export const getUserStatsInGroup = async (req, res) => {
   const { groupId } = req.params;
-
+  const isMember = await isGroupMember(req.user.id, groupId);
+  if (!isMember) {
+    return res.status(403).json({
+      message: "Forbidden: Group members only",
+    });
+  }
   try {
     const users = await User.findAll({
       include: [
@@ -97,7 +113,7 @@ export const getUserStatsInGroup = async (req, res) => {
 
 export const getUserStats = async (req, res) => {
   const user = req.user;
-
+  
   try {
     // 1. Lấy tasks của user
     const tasks = await Task.findAll({

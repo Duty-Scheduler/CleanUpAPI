@@ -335,6 +335,96 @@
  *       500:
  *         description: Internal Server Error
  */
+/**
+ * @swagger
+ * /api/v1/task/group/{groupId}/tasks/by-date:
+ *   get:
+ *     summary: Get tasks in a group by specific date (protected, group members only)
+ *     tags: [Task]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the group
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: 2026-01-07
+ *         description: Date to filter tasks (format YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: List of tasks in the group for the given date
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 groupId:
+ *                   type: string
+ *                   format: uuid
+ *                 date:
+ *                   type: string
+ *                   example: 2026-01-07
+ *                 total:
+ *                   type: integer
+ *                   example: 2
+ *                 tasks:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       title:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       status:
+ *                         type: boolean
+ *                       proof:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       Users:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: string
+ *                               format: uuid
+ *                             name:
+ *                               type: string
+ *                             email:
+ *                               type: string
+ *                             avatar:
+ *                               type: string
+ *                             UserGroupTask:
+ *                               type: object
+ *                               properties:
+ *                                 penalty_status:
+ *                                   type: boolean
+ *       400:
+ *         description: Missing or invalid date query parameter
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (group members only)
+ *       500:
+ *         description: Internal Server Error
+ */
+
 import express from "express";
 import {
   getAllTaskInGroup,
@@ -343,6 +433,7 @@ import {
   updateTask,
   deleteTask,
   uploadProof,
+  getTasksByDate
 } from "../controllers/task.controller.js";
 
 import { protectedRoute } from "../middleware/auth.middleware.js";
@@ -376,5 +467,12 @@ router.put("/:taskId", protectedRoute, updateTask);
  * DELETE
  */
 router.delete("/:taskId", protectedRoute, deleteTask);
+
+router.get(
+  "/group/:groupId/tasks/by-date",
+  protectedRoute,
+  getTasksByDate
+);
+
 
 export default router;
