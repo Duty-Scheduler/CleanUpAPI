@@ -43,14 +43,17 @@ export const getJoinedGroup = async (req, res) => {
     if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
     }
-
+    
     try {
         const groups = await user.getGroups({
             through: {
                 attributes: ['isAdmin']
             }
         });
-        return res.status(200).json({ groups });
+        const uniqueGroups = Array.from(
+            new Map(groups.map(g => [g.id, g])).values()
+        );
+        return res.status(200).json({ groups: uniqueGroups });
     } catch (error) {
         return res.status(500).json({
             message: 'Internal Server Error'
