@@ -426,7 +426,7 @@
  */
 /**
  * @swagger
- * /api/v1/myTask/by-date:
+ * /api/v1/task/myTask/by-date:
  *   get:
  *     summary: Get current user's tasks by specific date (protected)
  *     tags: [Task]
