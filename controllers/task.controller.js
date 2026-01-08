@@ -76,6 +76,69 @@ export const getTasksByDate = async (req, res) => {
   }
 };
 
+export const getUserTasksByDate = async (req, res) => {
+  const user = req.user;
+  const { date } = req.query;
+
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  if (!date) {
+    return res.status(400).json({
+      message: "Missing required query param: date (YYYY-MM-DD)",
+    });
+  }
+
+  // Parse date (UTC)
+  const startDate = new Date(`${date}T00:00:00.000Z`);
+  const endDate = new Date(`${date}T23:59:59.999Z`);
+
+  if (isNaN(startDate.getTime())) {
+    return res.status(400).json({
+      message: "Invalid date format. Use YYYY-MM-DD",
+    });
+  }
+
+  try {
+    const tasks = await Task.findAll({
+      where: {
+        createdAt: {
+          [Op.between]: [startDate, endDate],
+        },
+      },
+      attributes: ["id", "title", "description", "status", "proof", "createdAt"],
+      include: [
+        {
+          model: User,
+          attributes: ["id", "name", "email", "avatar"],
+          through: {
+            model: UserGroupTask,
+            attributes: ["penalty_status"],
+            where: {
+              UserId: user.id, 
+            },
+          },
+          required: true, 
+        },
+      ],
+      order: [["createdAt", "ASC"]],
+    });
+
+    return res.status(200).json({
+      date,
+      total: tasks.length,
+      tasks,
+    });
+  } catch (error) {
+    console.error("getUserTasksByDate error:", error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 export const getAllTaskInGroup = async (req, res) => {
   const { groupId } = req.params;
   if(!groupId){

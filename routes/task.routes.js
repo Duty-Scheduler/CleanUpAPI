@@ -424,6 +424,86 @@
  *       500:
  *         description: Internal Server Error
  */
+/**
+ * @swagger
+ * /api/v1/myTask/by-date:
+ *   get:
+ *     summary: Get current user's tasks by specific date (protected)
+ *     tags: [Task]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: 2026-01-08
+ *         description: Date to filter tasks (format YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: List of user's tasks for the given date
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 date:
+ *                   type: string
+ *                   example: 2026-01-08
+ *                 total:
+ *                   type: integer
+ *                   example: 2
+ *                 tasks:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         example: 1
+ *                       title:
+ *                         type: string
+ *                         example: "Finish report"
+ *                       description:
+ *                         type: string
+ *                         example: "Complete the weekly progress report"
+ *                       status:
+ *                         type: string
+ *                         example: "completed"
+ *                       proof:
+ *                         type: string
+ *                         nullable: true
+ *                         example: "https://example.com/proof.png"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       Users:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             id:
+ *                               type: integer
+ *                             name:
+ *                               type: string
+ *                             email:
+ *                               type: string
+ *                             avatar:
+ *                               type: string
+ *                             TaskUser:
+ *                               type: object
+ *                               properties:
+ *                                 penalty_status:
+ *                                   type: string
+ *                                   example: "none"
+ *       400:
+ *         description: Missing or invalid date query parameter
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal Server Error
+ */
 
 import express from "express";
 import {
@@ -433,7 +513,8 @@ import {
   updateTask,
   deleteTask,
   uploadProof,
-  getTasksByDate
+  getTasksByDate,
+  getUserTasksByDate
 } from "../controllers/task.controller.js";
 
 import { protectedRoute } from "../middleware/auth.middleware.js";
@@ -474,5 +555,16 @@ router.get(
   getTasksByDate
 );
 
+router.get(
+  "/group/:groupId/tasks/by-date",
+  protectedRoute,
+  getTasksByDate
+);
+
+router.get(
+  "/myTask/by-date",
+  protectedRoute,
+  getUserTasksByDate
+);
 
 export default router;
