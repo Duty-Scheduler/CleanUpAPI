@@ -504,6 +504,86 @@
  *       500:
  *         description: Internal Server Error
  */
+/**
+ * @swagger
+ * /api/v1/task/group/{groupId}/task/{taskId}:
+ *   get:
+ *     summary: Get task detail by ID in a group (protected, group members only)
+ *     tags: [Task]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the group
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID of the task
+ *     responses:
+ *       200:
+ *         description: Task detail retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 task:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     title:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     status:
+ *                       type: boolean
+ *                     proof:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     Users:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                             format: uuid
+ *                           name:
+ *                             type: string
+ *                           email:
+ *                             type: string
+ *                           avatar:
+ *                             type: string
+ *                           UserGroupTask:
+ *                             type: object
+ *                             properties:
+ *                               penalty_status:
+ *                                 type: boolean
+ *       400:
+ *         description: Missing groupId or taskId
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (group members only)
+ *       404:
+ *         description: Task not found
+ *       500:
+ *         description: Internal Server Error
+ */
 
 import express from "express";
 import {
@@ -514,7 +594,8 @@ import {
   deleteTask,
   uploadProof,
   getTasksByDate,
-  getUserTasksByDate
+  getUserTasksByDate,
+  getTaskById
 } from "../controllers/task.controller.js";
 
 import { protectedRoute } from "../middleware/auth.middleware.js";
@@ -566,5 +647,11 @@ router.get(
   protectedRoute,
   getUserTasksByDate
 );
+
+router.get(
+  "/group/:groupId/task/:taskId",
+  protectedRoute,
+  getTaskById
+)
 
 export default router;
